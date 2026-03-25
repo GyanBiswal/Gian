@@ -1,6 +1,7 @@
 import userModel from "../models/user.model.js";
 import * as userService from "../services/user.service.js";
 import { validationResult } from "express-validator";
+import redisClient from "../services/redis.service.js";
 
 export const createUserController = async (req, res) => {
     try {
@@ -65,5 +66,42 @@ export const loginUserController = async (req, res) => {
         res.status(500).json({
             message: "Internal server error"
         });
+    }
+};
+
+export const profileController = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user.id).select("-password");
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json(user);
+    } catch (error) {
+        console.error("Error fetching user profile:", error.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const logoutController = async (req, res) => {
+    try {
+        const token =
+            req.cookies?.token ||
+            req.headers.authorization?.split(" ")[1];
+
+        if (!token) {
+            return res.status(400).json({ message: "No token provided" });
+        }
+
+        await redisClient.set(token, "blacklisted", "EX", 24 * 60 * 60);
+
+        res.clearCookie("token");
+
+        res.json({
+            message: "User logged out successfully"
+        });
+
+    } catch (error) {
+        console.error("Error logging out user:", error.message);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
