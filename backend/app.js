@@ -2,18 +2,25 @@ import express from "express";
 import morgan from "morgan";
 import connectDB from "./db/db.js";
 import userRoutes from "./routes/user.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 connectDB();
 
 const app = express();
 
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/users", userRoutes);
+app.use("/chat", chatRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

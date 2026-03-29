@@ -1,11 +1,20 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
+import axios from "../config/axios";
+import { useUser } from "../context/UserContext"
 
 export default function Login() {
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const [warp, setWarp] = useState(false)
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
   const navigate = useNavigate()
+  const { login } = useUser()
 
   const handleMouseMove = (e) => {
     const { clientX, clientY } = e
@@ -18,13 +27,38 @@ export default function Login() {
     }))
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    setWarp(true)
+    setLoading(true)
+    setError('')
 
-    setTimeout(() => {
-      navigate('/dashboard')
-    }, 1200)
+    try {
+      const res = await axios.post('/users/login', {
+        email,
+        password
+      })
+
+      console.log("LOGIN SUCCESS:", res.data)
+
+      // ✅ Save token (IMPORTANT)
+      login(res.data.user, res.data.token)
+      
+      // ✨ trigger animation
+      setWarp(true)
+
+      setTimeout(() => {
+        navigate('/dashboard')
+      }, 800)
+
+    } catch (err) {
+      console.error(err)
+
+      setError(
+        err.response?.data?.message || "Login failed. Try again."
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -33,10 +67,10 @@ export default function Login() {
       className="min-h-screen flex items-center justify-center relative overflow-hidden bg-black"
     >
 
-      {/* 🌌 Deep Space */}
+      {/* 🌌 Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#050816] to-black" />
 
-      {/* 🌠 Parallax Stars (3 layers) */}
+      {/* 🌠 Stars */}
       {[...Array(60)].map((_, i) => (
         <motion.div
           key={i}
@@ -92,6 +126,8 @@ export default function Login() {
         <form onSubmit={handleLogin} className="space-y-6">
 
           <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             type="email"
             required
             placeholder="Email"
@@ -99,18 +135,28 @@ export default function Login() {
           />
 
           <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             type="password"
             required
             placeholder="Password"
             className="w-full p-3 rounded-xl bg-white/[0.03] text-white border border-white/10 outline-none"
           />
 
+          {/* ❌ Error message */}
+          {error && (
+            <p className="text-red-400 text-sm text-center">
+              {error}
+            </p>
+          )}
+
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
+            disabled={loading}
             className="w-full py-3 rounded-xl bg-white text-black font-medium"
           >
-            Sign In
+            {loading ? "Signing in..." : "Sign In"}
           </motion.button>
 
         </form>

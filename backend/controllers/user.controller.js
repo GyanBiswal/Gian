@@ -4,15 +4,23 @@ import { validationResult } from "express-validator";
 import redisClient from "../services/redis.service.js";
 
 export const createUserController = async (req, res) => {
+    console.log("BODY:", req.body)
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const { email, password } = req.body;
-        const user = await userService.createUser({ email, password });
+        const { name, email, password } = req.body;
+        const user = await userService.createUser({ name, email, password });
         const token = user.generateJWT(user._id);
-        res.status(201).json({ user, token });
+        res.status(201).json({
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+          },
+          token,
+        });
     } catch (error) {
         console.error("Error creating user:", error.message);
         res.status(500).json({ message: "Internal server error" });
@@ -54,6 +62,7 @@ export const loginUserController = async (req, res) => {
         res.json({
             user: {
                 id: user._id,
+                name: user.name,
                 email: user.email
             },
             token

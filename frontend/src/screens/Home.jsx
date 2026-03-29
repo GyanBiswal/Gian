@@ -58,7 +58,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col items-center justify-center text-white bg-black relative overflow-hidden">
 
       {/* 🌌 Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-[#050816] to-black" />
+      <div className="absolute inset-0 bg-linear-to-br from-black via-[#050816] to-black" />
 
       {/* ✨ Stars */}
       {[...Array(60)].map((_, i) => (
